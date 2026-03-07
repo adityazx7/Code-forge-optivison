@@ -1,27 +1,10 @@
 import { useState, useEffect } from 'react';
 import { api } from '../api';
 import Plot from 'react-plotly.js';
-import { TrendingUp, TrendingDown, Activity, BarChart3, Target, Calendar } from 'lucide-react';
+import { TrendingUp, BarChart3, Activity, Target, Calendar, Database } from 'lucide-react';
+import { getPlotlyLayout, formatNumber } from '../chartConfig';
 
-const plotLayout = {
-    paper_bgcolor: 'transparent',
-    plot_bgcolor: 'transparent',
-    font: { color: '#94a3b8', family: 'Inter', size: 12 },
-    margin: { t: 30, r: 20, b: 50, l: 60 },
-    xaxis: { gridcolor: 'rgba(148,163,184,0.08)', linecolor: 'rgba(148,163,184,0.1)' },
-    yaxis: { gridcolor: 'rgba(148,163,184,0.08)', linecolor: 'rgba(148,163,184,0.1)' },
-    legend: { bgcolor: 'transparent', font: { size: 11 } },
-    hoverlabel: { bgcolor: '#1a1f2e', bordercolor: '#00d4ff', font: { color: '#f1f5f9', size: 12 } },
-};
-
-function formatNumber(n) {
-    if (n >= 1e7) return (n / 1e7).toFixed(2) + ' Cr';
-    if (n >= 1e5) return (n / 1e5).toFixed(2) + ' L';
-    if (n >= 1e3) return (n / 1e3).toFixed(1) + 'K';
-    return n?.toLocaleString?.() ?? n;
-}
-
-export default function Dashboard() {
+export default function Dashboard({ theme }) {
     const [overview, setOverview] = useState(null);
     const [spotData, setSpotData] = useState([]);
     const [pcrData, setPcrData] = useState([]);
@@ -43,6 +26,8 @@ export default function Dashboard() {
         }).catch(() => setLoading(false));
     }, []);
 
+    const plotLayout = getPlotlyLayout(theme);
+
     if (loading) return (
         <div className="loading-container">
             <div className="loading-spinner" />
@@ -51,19 +36,22 @@ export default function Dashboard() {
     );
 
     const metrics = overview ? [
-        { label: 'Spot Price', value: '₹' + overview.spot_price?.toLocaleString(), color: 'cyan', icon: TrendingUp, sub: 'NIFTY 50' },
-        { label: 'Total CE OI', value: formatNumber(overview.total_ce_oi), color: 'green', icon: BarChart3, sub: 'Call Open Interest' },
-        { label: 'Total PE OI', value: formatNumber(overview.total_pe_oi), color: 'red', icon: BarChart3, sub: 'Put Open Interest' },
-        { label: 'PCR (OI)', value: overview.avg_pcr?.toFixed(3), color: 'purple', icon: Activity, sub: overview.avg_pcr > 1 ? '🐂 Bullish Bias' : '🐻 Bearish Bias' },
-        { label: 'Max Vol Strike', value: '₹' + overview.max_volume_strike?.toLocaleString(), color: 'orange', icon: Target, sub: 'Highest Activity' },
-        { label: 'Data Points', value: formatNumber(overview.total_records), color: 'blue', icon: Calendar, sub: `${overview.unique_dates} trading sessions` },
+        { label: 'Spot Price', value: '₹' + overview.spot_price?.toLocaleString(), color: 'cyan', sub: 'NIFTY 50 Index' },
+        { label: 'Total CE OI', value: formatNumber(overview.total_ce_oi), color: 'green', sub: 'Call Open Interest' },
+        { label: 'Total PE OI', value: formatNumber(overview.total_pe_oi), color: 'red', sub: 'Put Open Interest' },
+        { label: 'PCR (OI)', value: overview.avg_pcr?.toFixed(3), color: 'purple', sub: overview.avg_pcr > 1 ? 'Bullish Bias' : 'Bearish Bias' },
+        { label: 'Max Vol Strike', value: '₹' + overview.max_volume_strike?.toLocaleString(), color: 'orange', sub: 'Highest Activity Zone' },
+        { label: 'Data Points', value: formatNumber(overview.total_records), color: 'blue', sub: `${overview.unique_dates} trading sessions` },
     ] : [];
 
     return (
         <div>
             <div className="page-header">
-                <h2>📊 Market Dashboard</h2>
-                <p>Real-time NIFTY options analytics powered by AI • {overview?.expiries?.length} expiry cycles tracked</p>
+                <div className="page-header-icon"><BarChart3 /></div>
+                <div className="page-header-text">
+                    <h2>Market Dashboard</h2>
+                    <p>NIFTY options analytics powered by AI &middot; {overview?.expiries?.length} expiry cycles tracked</p>
+                </div>
             </div>
 
             <div className="metrics-grid">
@@ -77,7 +65,6 @@ export default function Dashboard() {
             </div>
 
             <div className="charts-grid">
-                {/* Spot Price Chart */}
                 <div className="card animate-in">
                     <div className="card-header">
                         <div className="card-title"><TrendingUp /> NIFTY Spot Price Movement</div>
@@ -89,8 +76,8 @@ export default function Dashboard() {
                             type: 'scatter',
                             mode: 'lines',
                             fill: 'tonexty',
-                            line: { color: '#00d4ff', width: 2 },
-                            fillcolor: 'rgba(0,212,255,0.05)',
+                            line: { color: '#0891b2', width: 2 },
+                            fillcolor: 'rgba(8,145,178,0.06)',
                             hovertemplate: '₹%{y:,.2f}<br>%{x}<extra></extra>',
                         }]}
                         layout={{ ...plotLayout, height: 320, yaxis: { ...plotLayout.yaxis, title: 'Price (₹)' } }}
@@ -99,7 +86,6 @@ export default function Dashboard() {
                     />
                 </div>
 
-                {/* PCR Timeline */}
                 <div className="card animate-in">
                     <div className="card-header">
                         <div className="card-title"><Activity /> Put-Call Ratio Trend</div>
@@ -112,8 +98,8 @@ export default function Dashboard() {
                                 type: 'scatter',
                                 mode: 'lines',
                                 name: 'PCR (OI)',
-                                line: { color: '#8b5cf6', width: 2 },
-                                hovertemplate: 'PCR: %{y:.3f}<extra>OI</extra>',
+                                line: { color: '#7c3aed', width: 2 },
+                                hovertemplate: 'PCR: %{y:.3f}<extra>OI Based</extra>',
                             },
                             {
                                 x: pcrData.map(d => d.datetime),
@@ -121,8 +107,8 @@ export default function Dashboard() {
                                 type: 'scatter',
                                 mode: 'lines',
                                 name: 'PCR (Volume)',
-                                line: { color: '#f59e0b', width: 1.5, dash: 'dot' },
-                                hovertemplate: 'PCR: %{y:.3f}<extra>Vol</extra>',
+                                line: { color: '#d97706', width: 1.5, dash: 'dot' },
+                                hovertemplate: 'PCR: %{y:.3f}<extra>Volume Based</extra>',
                             },
                         ]}
                         layout={{
@@ -136,7 +122,6 @@ export default function Dashboard() {
                     />
                 </div>
 
-                {/* OI by Strike */}
                 <div className="card full-width animate-in">
                     <div className="card-header">
                         <div className="card-title"><BarChart3 /> Open Interest Distribution by Strike</div>
@@ -148,7 +133,7 @@ export default function Dashboard() {
                                 y: oiData.map(d => d.oi_CE),
                                 type: 'bar',
                                 name: 'Call OI',
-                                marker: { color: 'rgba(16,185,129,0.7)', line: { color: '#10b981', width: 1 } },
+                                marker: { color: 'rgba(5,150,105,0.75)', line: { color: '#059669', width: 1 } },
                                 hovertemplate: 'Strike: ₹%{x}<br>CE OI: %{y:,}<extra></extra>',
                             },
                             {
@@ -156,7 +141,7 @@ export default function Dashboard() {
                                 y: oiData.map(d => -d.oi_PE),
                                 type: 'bar',
                                 name: 'Put OI',
-                                marker: { color: 'rgba(239,68,68,0.7)', line: { color: '#ef4444', width: 1 } },
+                                marker: { color: 'rgba(220,38,38,0.75)', line: { color: '#dc2626', width: 1 } },
                                 hovertemplate: 'Strike: ₹%{x}<br>PE OI: %{customdata:,}<extra></extra>',
                                 customdata: oiData.map(d => d.oi_PE),
                             },

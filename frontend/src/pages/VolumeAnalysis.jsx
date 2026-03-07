@@ -1,26 +1,10 @@
 import { useState, useEffect } from 'react';
 import { api } from '../api';
 import Plot from 'react-plotly.js';
-import { BarChart3, TrendingUp, ArrowUpDown } from 'lucide-react';
+import { BarChart3, TrendingUp, ArrowUpDown, Trophy } from 'lucide-react';
+import { getPlotlyLayout, formatNumber } from '../chartConfig';
 
-const plotLayout = {
-    paper_bgcolor: 'transparent',
-    plot_bgcolor: 'transparent',
-    font: { color: '#94a3b8', family: 'Inter', size: 12 },
-    margin: { t: 30, r: 20, b: 60, l: 60 },
-    xaxis: { gridcolor: 'rgba(148,163,184,0.08)', linecolor: 'rgba(148,163,184,0.1)' },
-    yaxis: { gridcolor: 'rgba(148,163,184,0.08)', linecolor: 'rgba(148,163,184,0.1)' },
-    hoverlabel: { bgcolor: '#1a1f2e', bordercolor: '#00d4ff', font: { color: '#f1f5f9', size: 12 } },
-};
-
-function formatNumber(n) {
-    if (n >= 1e7) return (n / 1e7).toFixed(2) + ' Cr';
-    if (n >= 1e5) return (n / 1e5).toFixed(2) + ' L';
-    if (n >= 1e3) return (n / 1e3).toFixed(1) + 'K';
-    return n?.toLocaleString?.() ?? n;
-}
-
-export default function VolumeAnalysis() {
+export default function VolumeAnalysis({ theme }) {
     const [volumeData, setVolumeData] = useState([]);
     const [oiChanges, setOiChanges] = useState([]);
     const [spotData, setSpotData] = useState([]);
@@ -39,6 +23,8 @@ export default function VolumeAnalysis() {
         }).catch(() => setLoading(false));
     }, []);
 
+    const plotLayout = getPlotlyLayout(theme);
+
     if (loading) return (
         <div className="loading-container">
             <div className="loading-spinner" />
@@ -53,11 +39,13 @@ export default function VolumeAnalysis() {
     return (
         <div>
             <div className="page-header">
-                <h2>📈 Volume & OI Change Analysis</h2>
-                <p>Deep dive into trading volume patterns and open interest buildup/unwinding</p>
+                <div className="page-header-icon"><TrendingUp /></div>
+                <div className="page-header-text">
+                    <h2>Volume & OI Change Analysis</h2>
+                    <p>Deep dive into trading volume patterns and open interest buildup/unwinding</p>
+                </div>
             </div>
 
-            {/* Quick Stats */}
             <div className="metrics-grid">
                 <div className="metric-card green animate-in">
                     <div className="metric-label">Total CE Volume</div>
@@ -72,7 +60,7 @@ export default function VolumeAnalysis() {
                 <div className="metric-card cyan animate-in">
                     <div className="metric-label">Volume Ratio (CE/PE)</div>
                     <div className="metric-value cyan">{(totalCEVol / (totalPEVol || 1)).toFixed(3)}</div>
-                    <div className="metric-sub">{totalCEVol > totalPEVol ? '📈 More Call activity' : '📉 More Put activity'}</div>
+                    <div className="metric-sub">{totalCEVol > totalPEVol ? 'More Call activity' : 'More Put activity'}</div>
                 </div>
                 <div className="metric-card orange animate-in">
                     <div className="metric-label">Top Strike</div>
@@ -82,7 +70,6 @@ export default function VolumeAnalysis() {
             </div>
 
             <div className="charts-grid">
-                {/* Volume Waterfall */}
                 <div className="card animate-in">
                     <div className="card-header">
                         <div className="card-title"><BarChart3 /> CE vs PE Volume Comparison</div>
@@ -92,22 +79,18 @@ export default function VolumeAnalysis() {
                             {
                                 x: volumeData.map(d => d.strike),
                                 y: volumeData.map(d => d.volume_CE),
-                                type: 'scatter',
-                                mode: 'lines',
-                                fill: 'tonexty',
+                                type: 'scatter', mode: 'lines', fill: 'tonexty',
                                 name: 'Call Volume',
-                                line: { color: '#10b981', width: 2 },
-                                fillcolor: 'rgba(16,185,129,0.15)',
+                                line: { color: '#059669', width: 2 },
+                                fillcolor: 'rgba(5,150,105,0.12)',
                             },
                             {
                                 x: volumeData.map(d => d.strike),
                                 y: volumeData.map(d => d.volume_PE),
-                                type: 'scatter',
-                                mode: 'lines',
-                                fill: 'tonexty',
+                                type: 'scatter', mode: 'lines', fill: 'tonexty',
                                 name: 'Put Volume',
-                                line: { color: '#ef4444', width: 2 },
-                                fillcolor: 'rgba(239,68,68,0.15)',
+                                line: { color: '#dc2626', width: 2 },
+                                fillcolor: 'rgba(220,38,38,0.12)',
                             },
                         ]}
                         layout={{ ...plotLayout, height: 350, xaxis: { ...plotLayout.xaxis, title: 'Strike Price' }, yaxis: { ...plotLayout.yaxis, title: 'Volume' } }}
@@ -116,7 +99,6 @@ export default function VolumeAnalysis() {
                     />
                 </div>
 
-                {/* OI Change */}
                 <div className="card animate-in">
                     <div className="card-header">
                         <div className="card-title"><ArrowUpDown /> OI Change Analysis</div>
@@ -126,16 +108,14 @@ export default function VolumeAnalysis() {
                             {
                                 x: oiChanges.map(d => d.strike),
                                 y: oiChanges.map(d => d.oi_CE_change),
-                                type: 'bar',
-                                name: 'CE OI Change',
-                                marker: { color: oiChanges.map(d => d.oi_CE_change >= 0 ? '#10b981' : '#ef4444'), opacity: 0.75 },
+                                type: 'bar', name: 'CE OI Change',
+                                marker: { color: oiChanges.map(d => d.oi_CE_change >= 0 ? '#059669' : '#dc2626'), opacity: 0.75 },
                             },
                             {
                                 x: oiChanges.map(d => d.strike),
                                 y: oiChanges.map(d => d.oi_PE_change),
-                                type: 'bar',
-                                name: 'PE OI Change',
-                                marker: { color: oiChanges.map(d => d.oi_PE_change >= 0 ? '#3b82f6' : '#f59e0b'), opacity: 0.75 },
+                                type: 'bar', name: 'PE OI Change',
+                                marker: { color: oiChanges.map(d => d.oi_PE_change >= 0 ? '#2563eb' : '#d97706'), opacity: 0.75 },
                             },
                         ]}
                         layout={{ ...plotLayout, height: 350, barmode: 'group', xaxis: { ...plotLayout.xaxis, title: 'Strike' }, yaxis: { ...plotLayout.yaxis, title: 'OI Change' } }}
@@ -144,7 +124,6 @@ export default function VolumeAnalysis() {
                     />
                 </div>
 
-                {/* Volume Pie */}
                 <div className="card animate-in">
                     <div className="card-header">
                         <div className="card-title"><BarChart3 /> Volume Split</div>
@@ -156,11 +135,11 @@ export default function VolumeAnalysis() {
                             type: 'pie',
                             hole: 0.55,
                             marker: {
-                                colors: ['#10b981', '#ef4444'],
-                                line: { color: '#0a0e17', width: 3 },
+                                colors: ['#059669', '#dc2626'],
+                                line: { color: theme === 'dark' ? '#0a0e17' : '#f8fafc', width: 3 },
                             },
                             textinfo: 'percent+label',
-                            textfont: { color: '#f1f5f9', size: 12 },
+                            textfont: { color: theme === 'dark' ? '#f1f5f9' : '#0f172a', size: 12 },
                             hovertemplate: '%{label}: %{value:,}<br>%{percent}<extra></extra>',
                         }]}
                         layout={{ ...plotLayout, height: 320, margin: { t: 10, b: 10, l: 10, r: 10 }, showlegend: false }}
@@ -169,7 +148,6 @@ export default function VolumeAnalysis() {
                     />
                 </div>
 
-                {/* Spot + Volume overlay */}
                 <div className="card animate-in">
                     <div className="card-header">
                         <div className="card-title"><TrendingUp /> Spot Price Timeline</div>
@@ -178,11 +156,9 @@ export default function VolumeAnalysis() {
                         data={[{
                             x: spotData.map(d => d.datetime),
                             y: spotData.map(d => d.spot_close),
-                            type: 'scatter',
-                            mode: 'lines',
-                            fill: 'tonexty',
-                            line: { color: '#00d4ff', width: 2 },
-                            fillcolor: 'rgba(0,212,255,0.08)',
+                            type: 'scatter', mode: 'lines', fill: 'tonexty',
+                            line: { color: '#0891b2', width: 2 },
+                            fillcolor: 'rgba(8,145,178,0.06)',
                             hovertemplate: '₹%{y:,.2f}<br>%{x}<extra></extra>',
                         }]}
                         layout={{ ...plotLayout, height: 320, yaxis: { ...plotLayout.yaxis, title: 'Price (₹)' } }}
@@ -191,10 +167,9 @@ export default function VolumeAnalysis() {
                     />
                 </div>
 
-                {/* Top 5 Active Strikes Table */}
                 <div className="card full-width animate-in">
                     <div className="card-header">
-                        <div className="card-title"><BarChart3 /> Top 5 Most Active Strikes</div>
+                        <div className="card-title"><Trophy /> Top 5 Most Active Strikes</div>
                     </div>
                     <table className="data-table">
                         <thead>
@@ -210,14 +185,14 @@ export default function VolumeAnalysis() {
                         <tbody>
                             {topStrikes.map((d, i) => (
                                 <tr key={i}>
-                                    <td style={{ color: i === 0 ? '#f59e0b' : '#94a3b8', fontWeight: i === 0 ? 700 : 400 }}>
-                                        {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `#${i + 1}`}
+                                    <td style={{ fontWeight: i === 0 ? 700 : 400, color: i === 0 ? 'var(--accent-orange)' : 'var(--text-secondary)' }}>
+                                        #{i + 1}
                                     </td>
-                                    <td style={{ color: '#00d4ff' }}>₹{d.strike?.toLocaleString()}</td>
-                                    <td style={{ color: '#10b981' }}>{formatNumber(d.volume_CE)}</td>
-                                    <td style={{ color: '#ef4444' }}>{formatNumber(d.volume_PE)}</td>
-                                    <td style={{ color: '#f1f5f9', fontWeight: 600 }}>{formatNumber(d.total_volume)}</td>
-                                    <td>{d.volume_CE > d.volume_PE ? '🐂 CE Heavy' : '🐻 PE Heavy'}</td>
+                                    <td style={{ color: 'var(--accent-cyan)' }}>₹{d.strike?.toLocaleString()}</td>
+                                    <td style={{ color: 'var(--accent-green)' }}>{formatNumber(d.volume_CE)}</td>
+                                    <td style={{ color: 'var(--accent-red)' }}>{formatNumber(d.volume_PE)}</td>
+                                    <td style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{formatNumber(d.total_volume)}</td>
+                                    <td>{d.volume_CE > d.volume_PE ? 'CE Heavy' : 'PE Heavy'}</td>
                                 </tr>
                             ))}
                         </tbody>
