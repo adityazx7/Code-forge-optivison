@@ -1,0 +1,35 @@
+services:
+  # Backend FastAPI Service
+  - type: web
+    name: optivision-backend
+    env: python
+    buildCommand: pip install -r backend/requirements.txt
+    startCommand: uvicorn backend.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: SECRET_KEY
+        generateValue: true
+
+  # Frontend Next.js Service
+  - type: web
+    name: optivision-frontend
+    env: node
+    buildCommand: cd frontend && npm install && npm run build
+    startCommand: cd frontend && npm start
+    envVars:
+      - key: NODE_VERSION
+        value: 18.17.0
+      - key: NEXT_PUBLIC_API_URL
+        fromService:
+          type: web
+          name: optivision-backend
+          property: host
+          envVarKey: NEXT_PUBLIC_API_URL
+          # Note: Next.js will use this URL. E.g if host is my-backend.onrender.com, we need to append /api in code
+      - key: NEXT_PUBLIC_WS_URL
+        fromService:
+          type: web
+          name: optivision-backend
+          property: host
+          envVarKey: NEXT_PUBLIC_WS_URL

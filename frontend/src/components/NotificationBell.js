@@ -16,7 +16,14 @@ export default function NotificationBell() {
         if (!isAuthenticated || !token) return;
 
         function connect() {
-            const ws = new WebSocket(`ws://localhost:8000/ws/alerts/${token}`);
+            let wsUrl = `ws://localhost:8000/ws/alerts/${token}`;
+        
+            if (process.env.NEXT_PUBLIC_WS_URL) {
+                const host = process.env.NEXT_PUBLIC_WS_URL.replace(/\/$/, "");
+                wsUrl = host.startsWith('ws') ? `${host}/ws/alerts/${token}` : `wss://${host}/ws/alerts/${token}`;
+            }
+
+            const ws = new WebSocket(wsUrl);
             wsRef.current = ws;
 
             ws.onopen = () => {

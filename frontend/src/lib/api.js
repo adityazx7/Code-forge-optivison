@@ -1,4 +1,14 @@
-const API_BASE = 'http://localhost:8000';
+// API Base uses the provided env var, or defaults to localhost for development.
+// Note: Render provides raw hostnames, so we format them to include the protocol and /api path.
+const getApiBase = () => {
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    const host = process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, ""); 
+    return host.startsWith('http') ? `${host}/api` : `https://${host}/api`;
+  }
+  return 'http://localhost:8000/api';
+};
+
+const API_BASE = getApiBase().replace(/\/api$/, "");
 
 function getToken() {
   if (typeof window !== 'undefined') {
