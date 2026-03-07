@@ -160,9 +160,11 @@ CSV Data Files (147K+ Records)
 | AI/LLM | Ollama + Llama 3 | MIT / Meta License | Local AI chatbot, data narratives |
 | Frontend | React 19, Next.js | MIT | SPA with routing, SSR |
 | Visualization | Plotly.js, Recharts | MIT | Interactive 2D/3D charts |
+| UI Animation | framer-motion | MIT | High-performance spring UI/Logo animations |
 | Auth | python-jose, passlib (bcrypt) | MIT / BSD | JWT tokens, password hashing |
 | Real-time | FastAPI WebSocket | MIT | Push notifications |
 | HTTP Client | httpx | BSD | Async Ollama API communication |
+| Deployment | Render Blueprint (`render.yaml`) | — | Automated cloud deployment configuration |
 | Containerization | Docker, Docker Compose | Apache 2.0 | Multi-stage build deployment |
 | CI/CD | GitHub Actions | — | Lint, test, build verification |
 
@@ -185,9 +187,13 @@ CSV Data Files (147K+ Records)
 - Landing page with Three.js animated background
 - Auth pages (Sign In / Register) with JWT token management
 - 5 dashboard pages with Plotly.js and Recharts visualizations
+- Advanced `AnimatedLogo.js` UI architecture for premium app-wide framer-motion animations
 - AI Chatbot component with SSE streaming support
 - Notification bell component with WebSocket connection
 - Dark trading terminal theme with responsive design
+
+**Deployment / DevOps**:
+- `render.yaml` Blueprint seamlessly deploys both the independent Python and Node runtime services directly to the web with native Environment Variable piping.
 
 ### Key Algorithms
 
