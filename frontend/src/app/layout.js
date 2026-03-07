@@ -1,5 +1,4 @@
 import { ClerkProvider } from '@clerk/nextjs';
-import { dark } from '@clerk/themes';
 import './globals.css';
 
 export const metadata = {
@@ -9,7 +8,7 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <ClerkProvider appearance={{ baseTheme: dark }}>
+    <ClerkProvider appearance={{ variables: { colorPrimary: '#00d4ff', colorBackground: '#111827', colorText: '#f1f5f9', colorInputBackground: '#1a1f2e', colorInputText: '#f1f5f9' } }}>
       <html lang="en" data-theme="dark">
         <head>
           <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
