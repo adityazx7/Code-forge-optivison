@@ -1,11 +1,13 @@
 'use client';
 
 import Link from 'next/link';
-import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/nextjs';
+import { SignInButton, UserButton, useAuth } from '@clerk/nextjs';
 import { Zap, Brain, BarChart3, AlertTriangle, Box, TrendingUp, Shield, Users, Briefcase, GraduationCap, ArrowRight, Activity, Layers, Database, Cpu } from 'lucide-react';
 import ThreeBackground from '@/components/ThreeBackground';
 
 export default function LandingPage() {
+  const { isLoaded, userId } = useAuth();
+
   const features = [
     { icon: Brain, color: 'cyan', title: 'AI Anomaly Detection', desc: 'Isolation Forest ML model trained on 9 feature dimensions scans 147K+ data points to flag unusual options activity in real-time.' },
     { icon: Box, color: 'purple', title: '3D Volatility Surface', desc: 'Interactive 3D plots mapping IV across strikes and time-to-expiry. Rotate, zoom, and explore volatility patterns like a pro.' },
@@ -38,20 +40,24 @@ export default function LandingPage() {
           <span>OptiVision AI</span>
         </Link>
         <div className="landing-nav-actions">
-          <SignedOut>
-            <SignInButton mode="modal">
-              <button className="btn btn-outline">Sign In</button>
-            </SignInButton>
-            <Link href="/dashboard" className="btn btn-primary">
-              Launch Dashboard <ArrowRight size={16} />
-            </Link>
-          </SignedOut>
-          <SignedIn>
-            <Link href="/dashboard" className="btn btn-primary">
-              Dashboard <ArrowRight size={16} />
-            </Link>
-            <UserButton afterSignOutUrl="/" />
-          </SignedIn>
+          {isLoaded && !userId && (
+            <>
+              <SignInButton mode="modal">
+                <button className="btn btn-outline">Sign In</button>
+              </SignInButton>
+              <Link href="/dashboard" className="btn btn-primary">
+                Launch Dashboard <ArrowRight size={16} />
+              </Link>
+            </>
+          )}
+          {isLoaded && userId && (
+            <>
+              <Link href="/dashboard" className="btn btn-primary">
+                Dashboard <ArrowRight size={16} />
+              </Link>
+              <UserButton afterSignOutUrl="/" />
+            </>
+          )}
         </div>
       </nav>
 
@@ -72,18 +78,18 @@ export default function LandingPage() {
             interactive analytics dashboards — built entirely with FOSS.
           </p>
           <div className="hero-cta">
-            <SignedOut>
+            {isLoaded && !userId && (
               <SignInButton mode="modal">
                 <button className="btn btn-primary">
                   Get Started Free <ArrowRight size={16} />
                 </button>
               </SignInButton>
-            </SignedOut>
-            <SignedIn>
+            )}
+            {isLoaded && userId && (
               <Link href="/dashboard" className="btn btn-primary">
                 Open Dashboard <ArrowRight size={16} />
               </Link>
-            </SignedIn>
+            )}
             <a href="https://github.com/HarshadPanchal12/codeforge_optiVisionAI" target="_blank" rel="noreferrer" className="btn btn-outline">
               <Database size={16} /> View Source
             </a>
@@ -161,18 +167,18 @@ export default function LandingPage() {
         <div className="cta-box">
           <h2>Ready to Decode the Market?</h2>
           <p>Sign in to access AI-powered dashboards, 3D volatility surfaces, and real-time anomaly detection.</p>
-          <SignedOut>
+          {isLoaded && !userId && (
             <SignInButton mode="modal">
               <button className="btn btn-primary">
                 Launch OptiVision AI <ArrowRight size={16} />
               </button>
             </SignInButton>
-          </SignedOut>
-          <SignedIn>
+          )}
+          {isLoaded && userId && (
             <Link href="/dashboard" className="btn btn-primary">
               Go to Dashboard <ArrowRight size={16} />
             </Link>
-          </SignedIn>
+          )}
         </div>
       </section>
 
