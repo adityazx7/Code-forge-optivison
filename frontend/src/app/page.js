@@ -1,12 +1,13 @@
 'use client';
 
 import Link from 'next/link';
-import { SignInButton, UserButton, useAuth } from '@clerk/nextjs';
-import { Zap, Brain, BarChart3, AlertTriangle, Box, TrendingUp, Shield, Users, Briefcase, GraduationCap, ArrowRight, Activity, Layers, Database, Cpu } from 'lucide-react';
+import { useAuth } from '@/lib/AuthContext';
+import { Zap, Brain, BarChart3, AlertTriangle, Box, TrendingUp, Shield, Users, Briefcase, GraduationCap, ArrowRight, Activity, Layers, Database, Cpu, MessageCircle } from 'lucide-react';
 import ThreeBackground from '@/components/ThreeBackground';
+import AnimatedLogo from '@/components/AnimatedLogo';
 
 export default function LandingPage() {
-  const { isLoaded, userId } = useAuth();
+  const { isAuthenticated, user, loading, logout } = useAuth();
 
   const features = [
     { icon: Brain, color: 'cyan', title: 'AI Anomaly Detection', desc: 'Isolation Forest ML model trained on 9 feature dimensions scans 147K+ data points to flag unusual options activity in real-time.' },
@@ -26,8 +27,10 @@ export default function LandingPage() {
 
   const techStack = [
     'Next.js', 'React 19', 'Three.js', 'Plotly.js', 'FastAPI', 'Python', 'Pandas', 'NumPy',
-    'Scikit-learn', 'Isolation Forest', 'K-Means', 'Docker', 'GitHub Actions', 'Clerk Auth',
+    'Scikit-learn', 'Isolation Forest', 'K-Means', 'DuckDB', 'Ollama', 'Llama 3', 'WebSockets', 'JWT Auth',
   ];
+
+  if (loading) return null;
 
   return (
     <div className="landing">
@@ -35,27 +38,25 @@ export default function LandingPage() {
 
       {/* Navigation */}
       <nav className="landing-nav">
-        <Link href="/" className="landing-nav-logo">
-          <div className="icon-box"><Zap /></div>
-          <span>OptiVision AI</span>
-        </Link>
+        <AnimatedLogo className="landing-nav-logo" iconSize={20} textSize="1.2rem" />
         <div className="landing-nav-actions">
-          {isLoaded && !userId && (
+          {!isAuthenticated && (
             <>
-              <SignInButton mode="modal">
-                <button className="btn btn-outline">Sign In</button>
-              </SignInButton>
+              <Link href="/auth" className="btn btn-outline">Sign In</Link>
               <Link href="/dashboard" className="btn btn-primary">
                 Launch Dashboard <ArrowRight size={16} />
               </Link>
             </>
           )}
-          {isLoaded && userId && (
+          {isAuthenticated && (
             <>
               <Link href="/dashboard" className="btn btn-primary">
                 Dashboard <ArrowRight size={16} />
               </Link>
-              <UserButton afterSignOutUrl="/" />
+              <div className="user-menu-inline">
+                <span className="user-avatar">{user?.username?.[0]?.toUpperCase() || 'U'}</span>
+                <button className="btn btn-outline" onClick={logout}>Logout</button>
+              </div>
             </>
           )}
         </div>
@@ -78,14 +79,12 @@ export default function LandingPage() {
             interactive analytics dashboards — built entirely with FOSS.
           </p>
           <div className="hero-cta">
-            {isLoaded && !userId && (
-              <SignInButton mode="modal">
-                <button className="btn btn-primary">
-                  Get Started Free <ArrowRight size={16} />
-                </button>
-              </SignInButton>
+            {!isAuthenticated && (
+              <Link href="/auth" className="btn btn-primary">
+                Get Started Free <ArrowRight size={16} />
+              </Link>
             )}
-            {isLoaded && userId && (
+            {isAuthenticated && (
               <Link href="/dashboard" className="btn btn-primary">
                 Open Dashboard <ArrowRight size={16} />
               </Link>
@@ -108,7 +107,7 @@ export default function LandingPage() {
               <div className="hero-stat-label">Strike Prices Tracked</div>
             </div>
             <div className="hero-stat">
-              <div className="hero-stat-value">13</div>
+              <div className="hero-stat-value">20+</div>
               <div className="hero-stat-label">API Endpoints</div>
             </div>
           </div>
@@ -153,7 +152,7 @@ export default function LandingPage() {
       <section className="tech-section">
         <div className="section-header">
           <h2>Built With FOSS</h2>
-          <p>14 open-source technologies powering every layer of the stack.</p>
+          <p>16 open-source technologies powering every layer of the stack.</p>
         </div>
         <div className="tech-grid">
           {techStack.map((t, i) => (
@@ -167,14 +166,12 @@ export default function LandingPage() {
         <div className="cta-box">
           <h2>Ready to Decode the Market?</h2>
           <p>Sign in to access AI-powered dashboards, 3D volatility surfaces, and real-time anomaly detection.</p>
-          {isLoaded && !userId && (
-            <SignInButton mode="modal">
-              <button className="btn btn-primary">
-                Launch OptiVision AI <ArrowRight size={16} />
-              </button>
-            </SignInButton>
+          {!isAuthenticated && (
+            <Link href="/auth" className="btn btn-primary">
+              Launch OptiVision AI <ArrowRight size={16} />
+            </Link>
           )}
-          {isLoaded && userId && (
+          {isAuthenticated && (
             <Link href="/dashboard" className="btn btn-primary">
               Go to Dashboard <ArrowRight size={16} />
             </Link>

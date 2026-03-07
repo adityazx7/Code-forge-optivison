@@ -1,5 +1,5 @@
-import { ClerkProvider } from '@clerk/nextjs';
 import './globals.css';
+import { AuthProvider } from '@/lib/AuthContext';
 
 export const metadata = {
   title: 'OptiVision AI — AI-Powered Options Market Intelligence',
@@ -8,13 +8,13 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <ClerkProvider appearance={{ variables: { colorPrimary: '#00d4ff', colorBackground: '#111827', colorText: '#f1f5f9', colorInputBackground: '#1a1f2e', colorInputText: '#f1f5f9' } }}>
-      <html lang="en" data-theme="dark">
-        <head>
-          <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
-        </head>
-        <body>{children}</body>
-      </html>
-    </ClerkProvider>
+    <html lang="en" data-theme="dark">
+      <head>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+      </head>
+      <body>
+        <AuthProvider>{children}</AuthProvider>
+      </body>
+    </html>
   );
 }

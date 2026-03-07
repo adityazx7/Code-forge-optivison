@@ -2,9 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { UserButton } from '@clerk/nextjs';
-import { LayoutDashboard, BarChart3, AlertTriangle, Box, TrendingUp, Layers, Zap, Sun, Moon } from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation';
+import { useAuth } from '@/lib/AuthContext';
+import { LayoutDashboard, BarChart3, AlertTriangle, Box, TrendingUp, Layers, Zap, Sun, Moon, Settings, LogOut } from 'lucide-react';
+import NotificationBell from '@/components/NotificationBell';
+import ChatBot from '@/components/ChatBot';
+import AnimatedLogo from '@/components/AnimatedLogo';
 
 const navItems = [
     { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
@@ -12,10 +15,13 @@ const navItems = [
     { path: '/dashboard/anomalies', icon: AlertTriangle, label: 'Anomaly Detection' },
     { path: '/dashboard/volatility', icon: Box, label: 'Volatility Surface' },
     { path: '/dashboard/volume', icon: BarChart3, label: 'Volume Analysis' },
+    { path: '/dashboard/settings', icon: Settings, label: 'Settings' },
 ];
 
 export default function DashboardLayout({ children }) {
     const pathname = usePathname();
+    const router = useRouter();
+    const { user, isAuthenticated, loading, logout } = useAuth();
     const [theme, setTheme] = useState('dark');
 
     useEffect(() => {
@@ -24,6 +30,12 @@ export default function DashboardLayout({ children }) {
         document.documentElement.setAttribute('data-theme', saved);
     }, []);
 
+    useEffect(() => {
+        if (!loading && !isAuthenticated) {
+            router.push('/auth');
+        }
+    }, [loading, isAuthenticated, router]);
+
     const toggleTheme = () => {
         const next = theme === 'dark' ? 'light' : 'dark';
         setTheme(next);
@@ -31,20 +43,43 @@ export default function DashboardLayout({ children }) {
         document.documentElement.setAttribute('data-theme', next);
     };
 
+    function handleLogout() {
+        logout();
+        router.push('/');
+    }
+
+    if (loading) {
+        return (
+            <div className="loading-container">
+                <div className="loading-spinner" />
+                <p className="loading-text">Loading...</p>
+            </div>
+        );
+    }
+
+    if (!isAuthenticated) return null;
+
     return (
         <div className="app-layout">
             <aside className="sidebar">
-                <Link href="/" className="sidebar-logo" style={{ textDecoration: 'none' }}>
-                    <div className="logo-icon"><Zap /></div>
-                    <div>
-                        <h1>OptiVision AI</h1>
-                        <span>Options Intelligence Suite</span>
-                    </div>
-                </Link>
+                <div style={{ padding: '0 1rem', marginBottom: '2rem' }}>
+                    <AnimatedLogo className="sidebar-logo" iconSize={24} textSize="1.4rem" />
+                    <span style={{ 
+                        display: 'block', 
+                        fontSize: '0.75rem', 
+                        color: 'var(--text-muted)', 
+                        marginTop: '0.5rem',
+                        marginLeft: '3rem',
+                        letterSpacing: '0.5px',
+                        textTransform: 'uppercase'
+                    }}>
+                        Options Intelligence
+                    </span>
+                </div>
 
                 <nav className="sidebar-nav">
                     <div className="nav-section-label">Analytics</div>
-                    {navItems.map(({ path, icon: Icon, label }) => (
+                    {navItems.slice(0, 5).map(({ path, icon: Icon, label }) => (
                         <Link
                             key={path}
                             href={path}
@@ -54,6 +89,15 @@ export default function DashboardLayout({ children }) {
                             <span>{label}</span>
                         </Link>
                     ))}
+
+                    <div className="nav-section-label" style={{ marginTop: 16 }}>Account</div>
+                    <Link
+                        href="/dashboard/settings"
+                        className={`nav-item ${pathname === '/dashboard/settings' ? 'active' : ''}`}
+                    >
+                        <Settings />
+                        <span>Settings</span>
+                    </Link>
                 </nav>
 
                 <button className="theme-toggle" onClick={toggleTheme}>
@@ -62,15 +106,33 @@ export default function DashboardLayout({ children }) {
                 </button>
 
                 <div className="sidebar-footer">
-                    <div style={{ marginBottom: 8 }}><UserButton afterSignOutUrl="/" /></div>
-                    Built with FOSS<br />
-                    <a href="https://github.com/HarshadPanchal12/codeforge_optiVisionAI" target="_blank" rel="noreferrer">Team Antigravity</a>
+                    <div className="sidebar-user">
+                        <div className="sidebar-user-avatar">
+                            {user?.username?.[0]?.toUpperCase() || 'U'}
+                        </div>
+                        <div className="sidebar-user-info">
+                            <span className="sidebar-user-name">{user?.username || 'User'}</span>
+                            <span className="sidebar-user-email">{user?.email || ''}</span>
+                        </div>
+                    </div>
+                    <button className="logout-btn" onClick={handleLogout}>
+                        <LogOut size={16} />
+                        <span>Logout</span>
+                    </button>
                 </div>
             </aside>
 
             <main className="main-content">
+                <div className="topbar">
+                    <div />
+                    <div className="topbar-actions">
+                        <NotificationBell />
+                    </div>
+                </div>
                 {children}
             </main>
+
+            <ChatBot />
         </div>
     );
 }

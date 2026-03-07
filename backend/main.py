@@ -3,7 +3,9 @@ FastAPI Main Server — OptiVision AI
 REST API endpoints for the options analytics platform.
 """
 
-from fastapi import FastAPI, Query
+import asyncio
+from contextlib import asynccontextmanager
+from fastapi import FastAPI, Query, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import traceback
@@ -26,11 +28,38 @@ from backend.ml_engine import (
     get_anomaly_details,
     cluster_strikes,
 )
+from backend.database import init_db
+from backend.duckdb_engine import init_duckdb
+from backend.auth import router as auth_router, verify_token
+from backend.user_settings import router as settings_router
+from backend.chatbot import router as chatbot_router
+from backend.ws_manager import ws_manager
+from backend.alert_engine import alert_loop
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Startup and shutdown events."""
+    # Startup
+    print("[Server] Initializing databases...")
+    init_db()
+    init_duckdb()
+    print("[Server] Pre-loading options data...")
+    get_cached_data()
+    print("[Server] Starting alert engine...")
+    alert_task = asyncio.create_task(alert_loop(interval_seconds=120))
+    print("[Server] ✅ All systems ready!")
+    yield
+    # Shutdown
+    alert_task.cancel()
+    print("[Server] Shutdown complete.")
+
 
 app = FastAPI(
     title="OptiVision AI — Options Market Analytics",
     description="AI-Powered NIFTY Options Market Analytics Platform",
-    version="1.0.0",
+    version="2.0.0",
+    lifespan=lifespan,
 )
 
 # CORS for Next.js frontend
@@ -41,6 +70,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Mount routers
+app.include_router(auth_router)
+app.include_router(settings_router)
+app.include_router(chatbot_router)
 
 # Cache ML results
 _anomaly_data = None
@@ -54,11 +88,37 @@ def get_anomaly_data():
     return _anomaly_data
 
 
+# --- WebSocket Endpoint ---
+@app.websocket("/ws/alerts/{token}")
+async def websocket_alerts(websocket: WebSocket, token: str):
+    """WebSocket endpoint for real-time market alerts."""
+    payload = verify_token(token)
+    if not payload:
+        await websocket.close(code=4001, reason="Invalid token")
+        return
+
+    user_id = payload.get("user_id")
+    if not user_id:
+        await websocket.close(code=4001, reason="Invalid token payload")
+        return
+
+    await ws_manager.connect(websocket, user_id)
+    try:
+        while True:
+            # Keep connection alive, listen for client pings
+            data = await websocket.receive_text()
+            if data == "ping":
+                await websocket.send_json({"type": "pong"})
+    except WebSocketDisconnect:
+        ws_manager.disconnect(websocket, user_id)
+
+
+# --- Original API Endpoints ---
 @app.get("/")
 def root():
     return {
         "name": "OptiVision AI",
-        "version": "1.0.0",
+        "version": "2.0.0",
         "description": "AI-Powered Options Market Analytics Platform",
         "endpoints": [
             "/api/overview",
@@ -74,6 +134,13 @@ def root():
             "/api/anomalies/details",
             "/api/clusters",
             "/api/expiries",
+            "/api/auth/register",
+            "/api/auth/login",
+            "/api/auth/me",
+            "/api/settings",
+            "/api/chat",
+            "/api/chat/stream",
+            "/ws/alerts/{token}",
         ],
     }
 
