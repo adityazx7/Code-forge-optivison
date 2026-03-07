@@ -38,7 +38,7 @@ def detect_anomalies(df: pd.DataFrame) -> pd.DataFrame:
 
     # Isolation Forest
     iso_forest = IsolationForest(
-        n_estimators=200,
+        n_estimators=50,
         contamination=0.05,  # Expect ~5% anomalies
         random_state=42,
         n_jobs=-1,

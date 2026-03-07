@@ -16,7 +16,16 @@ export default function AnomalyPage() {
     useEffect(() => {
         setTheme(localStorage.getItem('optivision-theme') || 'dark');
         Promise.all([api.getAnomalySummary(), api.getAnomalyDetails(50), api.getClusters(5)])
-            .then(([s, d, c]) => { setSummary(s); setDetails(d.data || []); setClusters(c.data || []); setLoading(false); }).catch(() => setLoading(false));
+            .then(([s, d, c]) => { 
+                setSummary(s); 
+                setDetails(d.data || []); 
+                setClusters(c.data || []); 
+                setLoading(false); 
+            })
+            .catch((err) => {
+                console.error("Dashboard Fetch Error:", err);
+                setLoading(false);
+            });
     }, []);
 
     const plotLayout = getPlotlyLayout(theme);
