@@ -10,7 +10,7 @@
 ![GitHub Actions](https://img.shields.io/badge/CI/CD-GitHub%20Actions-2088FF?logo=github-actions&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
-> **Team Antigravity** | CodeForge Hackathon — FOSS MPSTME × TAQNEEQ
+> **Team CloseInnovators** | CodeForge Hackathon — FOSS MPSTME × TAQNEEQ
 
 ---
 
